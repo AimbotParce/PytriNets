@@ -77,13 +77,22 @@ class ReachabilityGraph:
         return self.__dead_ends
 
 
-def reachability(initial_marking: Marking) -> ReachabilityGraph:
-    """Computes the reachability graph of a Petri net given an initial marking."""
+def reachability(
+    initial_marking: Marking, max_iterations: int = 100_000, throw_error: bool = True
+) -> ReachabilityGraph:
+    """Computes the reachability graph of a Petri net given an initial marking.
+
+    Max iterations is the maximum number of iterations the algorithm will run before stopping.
+    It is there to prevent infinite loops in the case of an unbounded Petri net.
+
+    If throw_error is True, the function will raise an error if the maximum number of iterations is reached.
+    """
     root = ReachabilityNode(initial_marking)
     visited = dict[Marking, ReachabilityNode]()
     queue = deque[ReachabilityNode]([root])
     dead_ends = set[ReachabilityNode]()  # For now, we will not use this set
 
+    it = 0
     while queue:
         current = queue.popleft()
         if current.marking in visited:
@@ -101,5 +110,10 @@ def reachability(initial_marking: Marking) -> ReachabilityGraph:
                 queue.append(new_node)
             current.add_outgoing_node(new_node)
             new_node.add_incoming_node(current)
+        it += 1
+        if it >= max_iterations:
+            if throw_error:
+                raise ValueError("Maximum number of iterations reached.")
+            break
 
     return ReachabilityGraph(root, set(visited.values()), dead_ends)

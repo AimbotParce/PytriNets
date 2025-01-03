@@ -132,10 +132,6 @@ class Marking:
         self.__marking = defaultdict(int, marking)
 
     @property
-    def marking(self) -> dict[Place, int]:
-        return self.__marking
-
-    @property
     def origin(self) -> PetriNet:
         return self.__origin
 
@@ -149,9 +145,6 @@ class Marking:
 
     def __getitem__(self, place: Place) -> int:
         return self.__marking[place]
-
-    def __eq__(self, other: Self) -> bool:
-        return self.__marking == other.__marking and self.__origin == other.origin
 
     def _compute_available_transitions(self) -> set[tuple[Transition, Self]]:
         """Returns the set of all possible transitions that can be performed from the current marking, as well as the
@@ -194,4 +187,11 @@ class Marking:
         return hash(self.__origin) + sum(hash(place) * tokens for place, tokens in self.__marking.items())
 
     def __eq__(self, other: Self) -> bool:
-        return self.__marking == other.__marking and self.__origin == other.origin
+        if not self.__origin == other.origin:
+            return False
+        if not isinstance(other, Marking):
+            return False
+        for place in self.__origin.places:
+            if self.__marking[place] != other.__marking[place]:
+                return False
+        return True
