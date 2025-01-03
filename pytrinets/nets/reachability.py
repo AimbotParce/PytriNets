@@ -53,9 +53,12 @@ class ReachabilityNode:
 
 
 class ReachabilityGraph:
-    def __init__(self, initial_node: ReachabilityNode, nodes: set[ReachabilityNode]):
+    def __init__(
+        self, initial_node: ReachabilityNode, nodes: set[ReachabilityNode], dead_ends: set[ReachabilityNode] = None
+    ):
         self.__initial_node = initial_node
         self.__nodes: set[ReachabilityNode] = nodes
+        self.__dead_ends: set[ReachabilityNode] = dead_ends if dead_ends else set()
 
     @property
     def petrinet(self) -> PetriNet:
@@ -68,6 +71,10 @@ class ReachabilityGraph:
     @property
     def nodes(self) -> set[ReachabilityNode]:
         return self.__nodes
+
+    @property
+    def dead_ends(self) -> set[ReachabilityNode]:
+        return self.__dead_ends
 
 
 def reachability(initial_marking: Marking) -> ReachabilityGraph:
@@ -82,17 +89,17 @@ def reachability(initial_marking: Marking) -> ReachabilityGraph:
         if current.marking in visited:
             continue
         visited[current.marking] = current
-        available_markings = initial_marking.available_markings()
+        available_markings = current.marking.available_markings()
         if not available_markings:
             dead_ends.add(current)
             continue
-        for initial_marking in available_markings:
-            if initial_marking in visited:
-                new_node = visited[initial_marking]
+        for marking in available_markings:
+            if marking in visited:
+                new_node = visited[marking]
             else:
-                new_node = ReachabilityNode(initial_marking)
+                new_node = ReachabilityNode(marking)
                 queue.append(new_node)
             current.add_outgoing_node(new_node)
             new_node.add_incoming_node(current)
 
-    return ReachabilityGraph(root, set(visited.values()))
+    return ReachabilityGraph(root, set(visited.values()), dead_ends)

@@ -185,10 +185,13 @@ class Marking:
         return Marking(self.__origin, marking)
 
     def __str__(self) -> str:
-        return ", ".join(f"{place.name} x{tokens}" for place, tokens in self.__marking.items() if tokens > 0)
+        return ", ".join(f"{place.name} ({tokens})" for place, tokens in self.__marking.items() if tokens > 0)
 
     def __repr__(self) -> str:
         return f"Marking({repr(self.__origin)}, {self.__marking})"
 
     def __hash__(self) -> int:
         return hash(self.__origin) + sum(hash(place) * tokens for place, tokens in self.__marking.items())
+
+    def __eq__(self, other: Self) -> bool:
+        return self.__marking == other.__marking and self.__origin == other.origin
